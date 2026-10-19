@@ -17,59 +17,61 @@
         @keyframes spinAnim {
             0% { transform: translateY(-10px); opacity: 0.5; }
             50% { transform: translateY(10px); opacity: 0.8; }
-            100% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-10px); opacity: 0.5; }
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white font-sans h-screen flex flex-col justify-between p-2 select-none">
+<body class="bg-zinc-950 text-white font-sans flex flex-col min-h-screen justify-between select-none">
 
     <!-- Top Bar -->
-    <div class="flex justify-between items-center bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
-        <a href="index.html" class="bg-zinc-800 px-3 py-1 rounded text-xs font-bold text-yellow-500">← Home</a>
+    <div class="p-3 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center sticky top-0 z-20">
+        <a href="javascript:history.back()" class="text-xs bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700 text-yellow-500 font-bold">← Home</a>
         <div class="text-center">
-            <h1 class="text-base font-black text-yellow-500 tracking-wider">SuperAce</h1>
+            <h1 class="text-sm font-black text-yellow-500 tracking-wider uppercase">SuperAce</h1>
         </div>
         <div class="text-right">
-            <p class="text-[9px] text-zinc-400">Balance</p>
-            <p class="text-xs font-bold text-yellow-400">৳ <span id="liveBalance">0</span></p>
+            <p class="text-[10px] text-zinc-400">Balance</p>
+            <p id="userBalanceDisplay" class="text-xs font-bold text-yellow-400">৳ 0</p>
         </div>
     </div>
 
     <!-- Multiplier Header -->
-    <div class="bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 p-1.5 rounded-xl text-center font-black text-black shadow-lg flex justify-around items-center text-sm">
-        <span id="m1" class="px-2 py-0.5 rounded bg-yellow-300 shadow">x1</span>
-        <span id="m2" class="px-2 py-0.5 rounded opacity-50">x2</span>
-        <span id="m3" class="px-2 py-0.5 rounded opacity-50">x3</span>
-        <span id="m5" class="px-2 py-0.5 rounded opacity-50">x5</span>
+    <div class="p-3 bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-yellow-600/20 border-y border-yellow-500/20 text-center flex justify-around items-center text-xs font-black">
+        <span id="m1" class="px-2 py-1 bg-yellow-500 text-black rounded-md shadow">x1</span>
+        <span id="m2" class="px-2 py-1 text-zinc-500">x2</span>
+        <span id="m3" class="px-2 py-1 text-zinc-500">x3</span>
+        <span id="m5" class="px-2 py-1 text-zinc-500">x5</span>
     </div>
 
     <!-- 4x5 Slot Grid -->
-    <div class="bg-gradient-to-b from-zinc-900 via-zinc-900 to-amber-950/40 border-2 border-amber-500/40 rounded-2xl p-2 my-2 shadow-2xl flex-grow flex flex-col justify-center">
-        <div id="slotGrid" class="grid grid-cols-5 gap-1.5">
-            <!-- 20 Cards -->
-        </div>
-    </div>
-
-    <!-- Win & Bet Display -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-2 flex justify-between items-center px-4">
-        <div>
-            <p class="text-[10px] text-zinc-400">WIN BDT</p>
-            <p id="winDisplay" class="text-base font-extrabold text-green-400">0.00</p>
-        </div>
-        <div>
-            <p class="text-[10px] text-zinc-400">BET BDT</p>
-            <div class="flex items-center gap-1">
-                <button onclick="adjustBet(-10)" class="bg-zinc-800 px-2 rounded font-bold text-xs">-</button>
-                <span id="betDisplay" class="text-sm font-bold text-yellow-400">10</span>
-                <button onclick="adjustBet(10)" class="bg-zinc-800 px-2 rounded font-bold text-xs">+</button>
+    <div class="p-2 my-auto">
+        <div class="bg-zinc-900/90 border border-yellow-500/30 p-2 rounded-2xl shadow-2xl">
+            <div id="slotGrid" class="grid grid-cols-4 gap-1.5">
+                <!-- 20 Cards -->
             </div>
         </div>
     </div>
 
+    <!-- Win & Bet Display -->
+    <div class="bg-zinc-900/90 border-t border-zinc-800 p-3 flex justify-between items-center px-6">
+        <div>
+            <p class="text-[10px] text-zinc-400">WIN BDT</p>
+            <p id="winDisplay" class="text-base font-extrabold text-green-400">0.00</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="changeBet(-10)" class="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold active:scale-95">-</button>
+            <div class="text-center">
+                <p class="text-[10px] text-zinc-400">BET BDT</p>
+                <p id="betDisplay" class="text-xs font-bold text-yellow-400">10</p>
+            </div>
+            <button onclick="changeBet(10)" class="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold active:scale-95">+</button>
+        </div>
+    </div>
+
     <!-- Spin Control -->
-    <div class="flex justify-center items-center py-2">
-        <button id="spinBtn" onclick="spinSlots()" class="w-20 h-20 bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-500 rounded-full border-4 border-yellow-200 text-black font-black text-base shadow-2xl active:scale-95 transition flex flex-col justify-center items-center">
-            <span>SPIN</span>
+    <div class="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-center items-center">
+        <button id="spinBtn" onclick="startSpin()" class="w-20 h-20 rounded-full bg-gradient-to-b from-yellow-400 via-yellow-500 to-amber-600 text-black font-black text-sm border-4 border-yellow-300 shadow-lg shadow-yellow-500/20 active:scale-90 transition transform flex items-center justify-center">
+            SPIN
         </button>
     </div>
 
@@ -87,122 +89,121 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        if(!currentUser) {
-            alert("Please login first on home page!");
-            window.location.href = "index.html";
-        }
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentUserParam = urlParams.get('user');
+        
+        let storedUser = null;
+        try {
+            storedUser = JSON.parse(localStorage.getItem('currentUser'));
+        } catch(e) {}
 
-        let currentBalance = 0;
+        const activeUsername = currentUserParam || (storedUser ? storedUser.username : null);
+
+        let userBalance = 0;
         let currentBet = 10;
         let isSpinning = false;
 
-        let cardImages = {
-            ACE: "https://via.placeholder.com/100x120/111827/F59E0B?text=ACE",
-            K: "https://via.placeholder.com/100x120/111827/F59E0B?text=KING",
-            Q: "https://via.placeholder.com/100x120/111827/F59E0B?text=QUEEN",
-            J: "https://via.placeholder.com/100x120/111827/F59E0B?text=JACK",
-            SPADE: "https://via.placeholder.com/100x120/111827/F59E0B?text=SPADE"
-        };
-
-        db.ref('superace_cards').on('value', snapshot => {
-            const data = snapshot.val();
-            if(data) {
-                if(data.ACE) cardImages.ACE = data.ACE;
-                if(data.K) cardImages.K = data.K;
-                if(data.Q) cardImages.Q = data.Q;
-                if(data.J) cardImages.J = data.J;
-                if(data.SPADE) cardImages.SPADE = data.SPADE;
-                createInitialGrid();
-            }
-        });
-
-        db.ref('users/' + currentUser.username).on('value', snapshot => {
-            const data = snapshot.val();
-            if(data) {
-                currentBalance = data.balance || 0;
-                document.getElementById('liveBalance').innerText = currentBalance;
-            }
-        });
-
-        function adjustBet(val) {
-            if(isSpinning) return;
-            if(currentBet + val >= 10) {
-                currentBet += val;
-                document.getElementById('betDisplay').innerText = currentBet;
-            }
+        if (!activeUsername) {
+            alert('Please login first on home page!');
+        } else {
+            db.ref('users/' + activeUsername + '/balance').on('value', (snap) => {
+                userBalance = snap.val() || 0;
+                document.getElementById('userBalanceDisplay').innerText = '৳ ' + userBalance;
+            });
         }
 
-        const symbolKeys = ["ACE", "K", "Q", "J", "SPADE"];
+        // Default fallback symbols with emojis incase database is empty
+        let symbols = [
+            { name: 'Ace', icon: '🃏', color: 'from-amber-500 to-yellow-600', val: 5 },
+            { name: 'King', icon: '👑', color: 'from-purple-600 to-indigo-700', val: 3 },
+            { name: 'Queen', icon: '👸', color: 'from-pink-600 to-rose-700', val: 2 },
+            { name: 'Jack', icon: '⚔️', color: 'from-blue-600 to-cyan-700', val: 1.5 },
+            { name: 'Wild', icon: '🌟', color: 'from-yellow-400 to-amber-500', val: 10 }
+        ];
 
-        function createInitialGrid() {
+        // Fetch dynamic card images from Firebase Admin settings
+        db.ref('superace_cards').on('value', (snap) => {
+            const data = snap.val();
+            if(data) {
+                symbols = [
+                    { name: 'Ace', img: data.ACE || '', color: 'from-amber-500 to-yellow-600', val: 5 },
+                    { name: 'King', img: data.K || '', color: 'from-purple-600 to-indigo-700', val: 3 },
+                    { name: 'Queen', img: data.Q || '', color: 'from-pink-600 to-rose-700', val: 2 },
+                    { name: 'Jack', img: data.J || '', color: 'from-blue-600 to-cyan-700', val: 1.5 },
+                    { name: 'Wild', img: data.SPADE || '', color: 'from-yellow-400 to-amber-500', val: 10 }
+                ];
+                initGrid();
+            }
+        });
+
+        function initGrid() {
             const grid = document.getElementById('slotGrid');
             grid.innerHTML = '';
             for(let i = 0; i < 20; i++) {
-                const key = symbolKeys[Math.floor(Math.random() * symbolKeys.length)];
-                grid.appendChild(renderCard(key));
+                const randomSym = symbols[Math.floor(Math.random() * symbols.length)];
+                let content = randomSym.img ? `<img src="${randomSym.img}" class="w-10 h-10 object-contain">` : `<span class="text-xl">${randomSym.icon}</span>`;
+                
+                grid.innerHTML += `
+                    <div id="card-${i}" class="slot-card h-14 bg-gradient-to-b ${randomSym.color} border border-yellow-400/40 rounded-xl flex flex-col justify-center items-center shadow-md">
+                        ${content}
+                        <span class="text-[9px] font-bold text-white/90">${randomSym.name}</span>
+                    </div>
+                `;
             }
         }
+        initGrid();
 
-        function renderCard(key) {
-            const card = document.createElement('div');
-            card.className = "slot-card border border-amber-500/30 rounded-lg h-14 bg-zinc-900 overflow-hidden shadow";
-            card.innerHTML = `<img src="${cardImages[key]}" class="w-full h-full object-cover">`;
-            return card;
+        function changeBet(amt) {
+            if(isSpinning) return;
+            currentBet = Math.max(10, currentBet + amt);
+            document.getElementById('betDisplay').innerText = currentBet;
         }
 
-        function spinSlots() {
+        function startSpin() {
+            if(!activeUsername) {
+                alert('Please login first on home page!');
+                return;
+            }
+
             if(isSpinning) return;
-            if(currentBalance < currentBet) {
-                alert("Insufficient balance! Please deposit.");
+            if(userBalance < currentBet) {
+                alert('Insufficient Balance!');
                 return;
             }
 
             isSpinning = true;
-            document.getElementById('winDisplay').innerText = "0.00";
-
-            // Bet katar jonno balance minus kora holo
-            currentBalance -= currentBet;
-            db.ref('users/' + currentUser.username + '/balance').set(currentBalance);
+            document.getElementById('winDisplay').innerText = '0.00';
+            
+            db.ref('users/' + activeUsername + '/balance').set(userBalance - currentBet);
 
             const grid = document.getElementById('slotGrid');
-            for(let child of grid.children) {
-                child.classList.add('spinning');
+            const cards = grid.children;
+
+            for(let card of cards) {
+                card.classList.add('spinning');
             }
 
             setTimeout(() => {
-                grid.innerHTML = '';
-                let generatedKeys = [];
+                let winAmount = 0;
+                let isWin = Math.random() < 0.45;
 
-                // 40% chance jeteo (Win), 60% chance hare (Loss) er logic
-                let isWin = Math.random() < 0.4;
-                let winningSymbol = symbolKeys[Math.floor(Math.random() * symbolKeys.length)];
-
-                for(let i = 0; i < 20; i++) {
-                    let key;
-                    if(isWin && i < 3) {
-                        key = winningSymbol; // 3ta ba tar beshi mile jabe jeteo
-                    } else {
-                        key = symbolKeys[Math.floor(Math.random() * symbolKeys.length)];
-                    }
-                    generatedKeys.push(key);
-                    grid.appendChild(renderCard(key));
+                for(let card of cards) {
+                    card.classList.remove('spinning');
                 }
 
+                initGrid();
+
                 if(isWin) {
-                    let winAmount = currentBet * 2; // 2x profit
-                    currentBalance += winAmount;
-                    db.ref('users/' + currentUser.username + '/balance').set(currentBalance);
+                    const multiplier = [1.5, 2, 3, 5][Math.floor(Math.random() * 4)];
+                    winAmount = currentBet * multiplier;
                     document.getElementById('winDisplay').innerText = winAmount.toFixed(2);
-                } else {
-                    document.getElementById('winDisplay').innerText = "0.00 (Lost)";
+                    
+                    db.ref('users/' + activeUsername + '/balance').set((userBalance - currentBet) + winAmount);
                 }
 
                 isSpinning = false;
-            }, 800);
+            }, 1200);
         }
-
-        createInitialGrid();
     </script>
 </body>
-  </html>
+</html>
