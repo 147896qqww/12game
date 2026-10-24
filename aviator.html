@@ -158,7 +158,17 @@ measurementId:"G-MV24V93XQF"
 };
 
 let db=null;
-let currentUser=JSON.parse(localStorage.getItem('currentUser'))||null;
+let currentUser = null;
+
+try {
+    currentUser = JSON.parse(
+        localStorage.getItem('currentUser') ||
+        sessionStorage.getItem('currentUser') ||
+        'null'
+    );
+} catch (e) {
+    currentUser = null;
+}
 let balance=0,state='countdown',countdown=8,multiplier=1,crashPoint=2;
 let roundId=Date.now().toString(),bets={},timer=null,startTime=0;
 let historyData=[],displayedBets=[],totalWin=0,listMode='all';
