@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aviator Game</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090a0d;color:white;font-family:Arial,sans-serif}
+.top{height:60px;background:#191a1e;display:flex;align-items:center;justify-content:space-between;padding:10px}
+.logo{color:#ff174f;font-size:25px;font-weight:bold;font-style:italic}
+.balance{color:#00ce00;font-size:16px;white-space:nowrap}
+.balance small{color:#aaa}
+.history{height:38px;display:flex;gap:16px;align-items:center;overflow:hidden;white-space:nowrap;padding:0 16px}
+.history span{font-size:15px;color:#c23acb}
+.history span:nth-child(even){color:#25b8ed}
+.game{height:310px;max-height:43vh;min-height:250px;margin:0 7px;position:relative;overflow:hidden;border:1px solid #303034;border-radius:25px;background:repeating-conic-gradient(from 240deg at 0% 100%,#10191d 0deg 9deg,#030507 9deg 18deg)}
+.mode{height:32px;background:#bd7200;text-align:center;font-size:17px;font-weight:bold;padding:5px}
+#graph{position:absolute;top:32px;left:0;width:100%;height:calc(100% - 32px)}
+#multiplier{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);font-size:clamp(42px,10vw,64px);font-weight:900;white-space:nowrap;z-index:2}
+#plane{position:absolute;left:2%;bottom:5px;width:64px;height:45px;z-index:3;pointer-events:none;transition:left .05s linear,bottom .05s linear}
+#plane img{display:block;width:100%;height:100%;object-fit:contain;transform:rotate(-25deg)}
+#status{position:absolute;bottom:10px;width:100%;text-align:center;color:#bbb;font-size:12px;z-index:4}
+.players{position:absolute;right:8px;bottom:8px;background:#16171bdd;border-radius:25px;padding:7px 10px;font-size:13px;z-index:5}
+.panels{padding:7px;display:grid;gap:7px}
+.card{background:#191a1e;border-radius:23px;padding:10px}
+.tabs{display:flex;background:#101114;border-radius:25px;padding:4px;max-width:300px;margin:0 auto 9px}
+.tabs button{flex:1;border:0;background:none;color:#aaa;padding:7px;border-radius:20px;font-size:14px}
+.tabs button.active{background:#303137;color:white}
+.row{display:grid;grid-template-columns:42% 58%;gap:5px}
+.amountbox{display:flex;align-items:center;justify-content:space-around;background:#101114;border-radius:25px;padding:4px;margin-bottom:5px}
+.amountbox button{border:0;border-radius:50%;background:#303137;color:white;width:28px;height:28px;font-size:20px}
+.amountbox input{width:55px;min-width:0;background:none;color:white;text-align:center;font-size:17px;font-weight:bold;border:0;outline:none}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.quick button{background:#101114;border:0;color:#999;border-radius:20px;padding:6px 2px;font-size:13px}
+.bet{height:95px;width:100%;border:2px solid #aaffaa;border-radius:18px;background:#08b900;color:white;font-size:26px}
+.bet small{display:block;font-size:18px}
+.bet.cash{background:#e2a000;color:#111}
+.results{margin:5px 7px 15px;padding:9px;background:#191a1e;border-radius:22px}
+.resulttabs{display:flex;background:#101114;border-radius:25px;padding:4px}
+.resulttabs button{flex:1;background:none;color:#aaa;border:0;padding:8px 2px;border-radius:20px;font-size:13px}
+.resulttabs button.active{background:#303137;color:white}
+.total{display:flex;justify-content:space-between;padding:10px 4px;color:#aaa;font-size:12px}
+.total strong{font-size:20px;color:white}
+.betlist{max-height:300px;overflow:auto}
+.betrow{display:grid;grid-template-columns:1.3fr .9fr .6fr .9fr;gap:3px;padding:8px 3px;font-size:10px;color:#ddd;border-radius:12px;background:#202b19}
+.betrow:nth-child(even){background:#151619}
+.betrow.head{background:#101114;color:#999}
+.win{color:#6de63d}.purple{color:#bd73ff}
+@media(max-width:360px){
+.logo{font-size:22px}.balance{font-size:14px}
+.game{height:280px}
+#plane{width:52px;height:37px}
+.amountbox input{width:43px;font-size:16px}
+.bet{height:88px;font-size:23px}.bet small{font-size:16px}
+}
+</style>
+</head>
+
+<body>
+<header class="top">
+<a class="logo" href="index.html">Aviator</a>
+<div class="balance"><span id="liveBalance">0.00</span> <small>BDT</small></div>
+<button onclick="alert('Menu')" style="background:none;border:0;color:#aaa;font-size:22px">☰</button>
+</header>
+
+<div class="history" id="history">
+<span>Waiting...</span>
+</div>
+
+<section class="game">
+<div class="mode">FUN MODE</div>
+<svg id="graph" viewBox="0 0 700 400" preserveAspectRatio="none">
+<defs>
+<radialGradient id="glow">
+<stop offset="0%" stop-color="#087da9" stop-opacity=".7"/>
+<stop offset="100%" stop-color="#00101b" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<ellipse cx="410" cy="150" rx="340" ry="240" fill="url(#glow)"/>
+<path id="area" fill="#ff174f" opacity=".4"/>
+<path id="line" fill="none" stroke="#ff174f" stroke-width="5" stroke-linecap="round"/>
+</svg>
+
+<div id="multiplier">1.00x</div>
+
+<div id="plane">
+<img src="https://e7.pngegg.com/pngimages/698/571/png-clipart-red-and-gray-monoplane-illustration-airplane-propeller-aircraft-aircraft-s-cartoon-vehicle-thumbnail.png" alt="Plane">
+</div>
+
+<div id="status">Connecting...</div>
+<div class="players">🪙 🪙 🪙 <span id="playerCount">0</span></div>
+</section>
+
+<section class="panels">
+<div class="card">
+<div class="tabs"><button class="active">Bet</button><button onclick="alert('Auto mode not enabled')">Auto</button></div>
+<div class="row"><div>
+<div class="amountbox">
+<button onclick="changeBet(1,-1)">−</button>
+<input id="amount1" type="number" value="1" min="1">
+<button onclick="changeBet(1,1)">+</button>
+</div>
+<div class="quick">
+<button onclick="setBet(1,100)">100</button><button onclick="setBet(1,200)">200</button>
+<button onclick="setBet(1,500)">500</button><button onclick="setBet(1,10000)">10,000</button>
+</div>
+</div>
+<button id="bet1" class="bet" onclick="toggleBet(1)">Bet<small>1.00 BDT</small></button>
+</div></div>
+
+<div class="card">
+<div class="tabs"><button class="active">Bet</button><button onclick="alert('Auto mode not enabled')">Auto</button></div>
+<div class="row"><div>
+<div class="amountbox">
+<button onclick="changeBet(2,-1)">−</button>
+<input id="amount2" type="number" value="1" min="1">
+<button onclick="changeBet(2,1)">+</button>
+</div>
+<div class="quick">
+<button onclick="setBet(2,100)">100</button><button onclick="setBet(2,200)">200</button>
+<button onclick="setBet(2,500)">500</button><button onclick="setBet(2,10000)">10,000</button>
+</div>
+</div>
+<button id="bet2" class="bet" onclick="toggleBet(2)">Bet<small>1.00 BDT</small></button>
+</div></div>
+</section>
+
+<section class="results">
+<div class="resulttabs">
+<button class="active" onclick="showList('all',this)">All Bets</button>
+<button onclick="showList('previous',this)">Previous</button>
+<button onclick="showList('top',this)">Top</button>
+</div>
+<div class="total">
+<div>🪙 🪙 🪙<br><span id="betCount">0 Bets</span></div>
+<div style="text-align:right"><strong id="totalWin">0.00</strong><br>Total win BDT</div>
+</div>
+<div class="betrow head"><span>Player</span><span>Bet BDT</span><span>X</span><span>Win BDT</span></div>
+<div class="betlist" id="betList"></div>
+</section>
+
+<script>
+const firebaseConfig={
+apiKey:"AIzaSyDlP4CMYbpWYq3EYBhCnLhwxRcGcEOMTUk",
+authDomain:"top-up-73e83.firebaseapp.com",
+databaseURL:"https://top-up-73e83-default-rtdb.firebaseio.com",
+projectId:"top-up-73e83",
+storageBucket:"top-up-73e83.firebasestorage.app",
+messagingSenderId:"30055612936",
+appId:"1:30055612936:web:ec146e10491422a0d987bd",
+measurementId:"G-MV24V93XQF"
+};
+
+let db=null;
+let currentUser=JSON.parse(localStorage.getItem('currentUser'))||null;
+let balance=0,state='countdown',countdown=8,multiplier=1,crashPoint=2;
+let roundId=Date.now().toString(),bets={},timer=null,startTime=0;
+let historyData=[],displayedBets=[],totalWin=0,listMode='all';
+const $=id=>document.getElementById(id);
+
+try{
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+db=firebase.database();
+}catch(e){console.error(e)}
+
+if(!currentUser){
+alert('Please login first');
+location.href='index.html';
+}else if(db){
+db.ref('users/'+currentUser.username).on('value',s=>{
+if(s.exists()){
+balance=Number(s.val().balance)||0;
+$('liveBalance').textContent=balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+});
+db.ref('aviatorBets').limitToLast(100).on('value',s=>{
+const d=s.val()||{};
+displayedBets=Object.values(d);
+$('playerCount').textContent=displayedBets.length;
+renderBets();
+});
+db.ref('aviatorHistory').limitToLast(12).on('value',s=>{
+const d=s.val()||{};
+historyData=Object.values(d).sort((a,b)=>b.time-a.time);
+renderHistory();
+});
+}
+
+function saveBalance(){
+return db.ref('users/'+currentUser.username+'/balance').set(balance);
+}
+function setBet(n,v){
+if(state!=='countdown')return;
+$('amount'+n).value=v;updateLabels();
+}
+function changeBet(n,v){
+if(state!=='countdown')return;
+$('amount'+n).value=Math.max(1,(Number($('amount'+n).value)||1)+v);
+updateLabels();
+}
+function updateLabels(){
+[1,2].forEach(n=>{
+let b=bets[n];
+if(b&&!b.cashed){
+$('bet'+n).innerHTML='Bet Placed<small>'+b.amount.toFixed(2)+' BDT</small>';
+}else{
+$('bet'+n).innerHTML='Bet<small>'+(Number($('amount'+n).value)||0).toFixed(2)+' BDT</small>';
+}
+});
+}
+function toggleBet(n){
+if(!db||!currentUser){alert('Login/Firebase connection check করো');return}
+if(state==='flying'){
+if(bets[n]&&!bets[n].cashed)cashout(n);
+return;
+}
+if(state!=='countdown'){alert('পরের রাউন্ডের জন্য অপেক্ষা করো');return}
+if(bets[n]&&!bets[n].cashed){
+if(bets[n].key)db.ref('aviatorBets/'+bets[n].key).remove();
+delete bets[n];updateLabels();return;
+}
+let amount=Number($('amount'+n).value);
+let pending=Object.values(bets).filter(b=>!b.cashed).reduce((s,b)=>s+b.amount,0);
+if(!amount||amount<1||pending+amount>balance){alert('Bet amount অথবা balance ঠিক নেই');return}
+let b={username:maskName(currentUser.username),amount,multiplier:0,win:0,status:'pending',roundId,time:Date.now(),cashed:false};
+let ref=db.ref('aviatorBets').push();b.key=ref.key;bets[n]=b;
+ref.set({username:b.username,amount,multiplier:0,win:0,status:'pending',roundId,time:b.time});
+updateLabels();
+}
+function maskName(s){s=String(s||'Player');return s.length<3?s[0]+'***':s.slice(0,2)+'***'+s.slice(-1)}
+function startCountdown(){
+state='countdown';countdown=8;roundId=Date.now().toString();bets={};multiplier=1;
+$('multiplier').textContent='1.00x';$('multiplier').style.color='white';
+$('line').setAttribute('d','');$('area').setAttribute('d','');
+$('plane').style.left='2%';$('plane').style.bottom='5px';
+updateLabels();$('status').textContent='Betting closes in '+countdown+'s';
+clearInterval(timer);
+timer=setInterval(()=>{
+countdown--;
+$('status').textContent='Betting closes in '+countdown+'s';
+if(countdown<=0){clearInterval(timer);startFlight()}
+},1000);
+}
+async function startFlight(){
+state='flying';
+let active=Object.keys(bets).map(n=>({n,b:bets[n]})).filter(x=>!x.b.cashed);
+if(!active.length){$('status').textContent='Next round soon';return setTimeout(startCountdown,2500)}
+let stake=active.reduce((s,x)=>s+x.b.amount,0);
+if(stake>balance){bets={};$('status').textContent='Balance changed';return setTimeout(startCountdown,2500)}
+balance-=stake;
+try{await saveBalance()}catch(e){balance+=stake;bets={};return setTimeout(startCountdown,2500)}
+active.forEach(x=>{x.b.status='flying';if(x.b.key)db.ref('aviatorBets/'+x.b.key).update({status:'flying'})});
+crashPoint=Number((1.08+Math.pow(Math.random(),2.2)*7.5).toFixed(2));
+startTime=Date.now();$('status').textContent='Plane is flying!';
+timer=setInterval(()=>{
+multiplier=Math.exp((Date.now()-startTime)/1000*.2);
+$('multiplier').textContent=multiplier.toFixed(2)+'x';drawGraph(multiplier);
+Object.keys(bets).forEach(n=>{
+let b=bets[n];if(!b.cashed){
+$('bet'+n).classList.add('cash');
+$('bet'+n).innerHTML='Cash Out<small>'+(b.amount*multiplier).toFixed(2)+' BDT</small>';
+}
+});
+if(multiplier>=crashPoint)endFlight();
+},50);
+}
+async function cashout(n){
+if(state!=='flying')return;
+let b=bets[n];if(!b||b.cashed)return;
+b.cashed=true;b.status='cashed';b.multiplier=multiplier;b.win=Math.floor(b.amount*multiplier*100)/100;
+balance+=b.win;totalWin+=b.win;
+$('totalWin').textContent=totalWin.toFixed(2);
+$('bet'+n).classList.remove('cash');
+$('bet'+n).innerHTML='Cashed Out<small>'+b.win.toFixed(2)+' BDT</small>';
+$('status').textContent='Cash Out '+multiplier.toFixed(2)+'x';
+try{await saveBalance()}catch(e){console.error(e)}
+if(b.key)db.ref('aviatorBets/'+b.key).update({status:'cashed',multiplier:b.multiplier,win:b.win,cashoutTime:Date.now()});
+}
+function endFlight(){
+clearInterval(timer);state='result';
+$('multiplier').textContent='CRASHED '+crashPoint.toFixed(2)+'x';
+$('multiplier').style.color='#ff174f';$('status').textContent='Round ended';
+Object.values(bets).forEach(b=>{
+if(!b.cashed){b.status='lost';if(b.key)db.ref('aviatorBets/'+b.key).update({status:'lost'})}
+});
+let item={multiplier:crashPoint,time:Date.now()};
+db.ref('aviatorHistory').push(item);
+historyData.unshift(item);historyData=historyData.slice(0,12);renderHistory();renderBets();
+setTimeout(startCountdown,2500);
+}
+function drawGraph(m){
+let w=700,h=400,endX=Math.min(690,Math.max(5,Math.log(m)*145)),endY=Math.max(20,h-Math.log(m)*100),d='M 0 400';
+for(let i=1;i<=60;i++){let t=i/60,x=endX*t,y=400-(400-endY)*Math.pow(t,1.55);d+=' L '+x.toFixed(1)+' '+y.toFixed(1)}
+$('line').setAttribute('d',d);$('area').setAttribute('d',d+' L '+endX+' 400 Z');
+$('plane').style.left=Math.min(82,Math.log(m)*20+2)+'%';
+$('plane').style.bottom=Math.min(65,Math.log(m)*28+5)+'px';
+}
+function renderHistory(){
+$('history').innerHTML='';
+historyData.slice(0,12).forEach(x=>{
+let s=document.createElement('span');s.textContent=Number(x.multiplier).toFixed(2)+'x';$('history').appendChild(s);
+});
+if(!historyData.length)$('history').textContent='Waiting...';
+}
+function renderBets(){
+let rows=displayedBets.slice();
+if(listMode==='previous')rows=rows.filter(b=>b.status==='cashed'||b.status==='lost');
+if(listMode==='top')rows.sort((a,b)=>(Number(b.win)||0)-(Number(a.win)||0));
+$('betList').innerHTML='';
+rows.slice(-100).reverse().forEach(b=>{
+let r=document.createElement('div');r.className='betrow';
+[b.username||'Player',(Number(b.amount)||0).toFixed(2),Number(b.multiplier)>0?Number(b.multiplier).toFixed(2)+'x':'—',Number(b.win)>0?Number(b.win).toFixed(2):'—'].forEach((v,i)=>{
+let s=document.createElement('span');s.textContent=v;
+if(i===2)s.className='purple';if(i===3&&Number(b.win)>0)s.className='win';r.appendChild(s);
+});
+$('betList').appendChild(r);
+});
+$('betCount').textContent=rows.length+' Bets';
+}
+function showList(mode,btn){
+listMode=mode;btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');renderBets();
+}
+updateLabels();startCountdown();
+</script>
+</body>
+</html>
