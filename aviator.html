@@ -160,15 +160,37 @@ measurementId:"G-MV24V93XQF"
 let db=null;
 let currentUser = null;
 
-try {
-    const savedUser = localStorage.getItem('currentUser');
+function resolveCurrentUser() {
+    const params = new URLSearchParams(window.location.search);
+    const userFromUrl = params.get('user');
 
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
+    try {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            if (parsedUser && parsedUser.username) {
+                currentUser = parsedUser;
+            }
+        }
+    } catch (e) {
+        console.error('User data read error:', e);
     }
-} catch (e) {
-    console.error('User data read error:', e);
+
+    if (userFromUrl) {
+        if (!currentUser || currentUser.username !== userFromUrl) {
+            currentUser = { username: userFromUrl };
+        }
+        try {
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        } catch (e) {
+            console.error('Could not save user from URL:', e);
+        }
+    }
+
+    return currentUser;
 }
+
+resolveCurrentUser();
 let balance=0,state='countdown',countdown=8,multiplier=1,crashPoint=2;
 let roundId=Date.now().toString(),bets={},timer=null,startTime=0;
 let historyData=[],displayedBets=[],totalWin=0,listMode='all';
