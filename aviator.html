@@ -161,13 +161,13 @@ let db=null;
 let currentUser = null;
 
 try {
-    currentUser = JSON.parse(
-        localStorage.getItem('currentUser') ||
-        sessionStorage.getItem('currentUser') ||
-        'null'
-    );
+    const savedUser = localStorage.getItem('currentUser');
+
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+    }
 } catch (e) {
-    currentUser = null;
+    console.error('User data read error:', e);
 }
 let balance=0,state='countdown',countdown=8,multiplier=1,crashPoint=2;
 let roundId=Date.now().toString(),bets={},timer=null,startTime=0;
